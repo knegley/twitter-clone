@@ -7,12 +7,16 @@ from authentication.models import TwitterUser, Tweet, Notification
 def home_view(request):
     if not request.user.is_authenticated or request.user.is_anonymous:
         return HttpResponseRedirect(reverse("login"))
-    tweets = [tweet for tweet in Tweet.objects.all()]
+
     notifications = Notification.objects.all()
     composed = TwitterUser.objects.get(
         username=request.user.username).tweet_set.all().count()
-    followers = [follower.username for follower in TwitterUser.objects.get(
-        id=request.user.id).followers.all()] or None
+
+    if composed is not None:
+        followers = [follower.username for follower in TwitterUser.objects.get(
+            id=request.user.id).followers.all()]
+        tweets = [tweet for tweet in Tweet.objects.all()
+                  if tweet.author.username in followers]
 
     return render(request, "home.html", {"notifications": notifications,
                                          "tweets": tweets,
@@ -84,10 +88,17 @@ def tweet_view(request):
 
 def tweet_detailed_view(request, tweet_id):
     tweet = Tweet.objects.filter(id=tweet_id)
+    is_following = "unfollow "
+    followers = None
     # breakpoint()
-    followers = [follower.username for follower in TwitterUser.objects.get(
-        id=request.user.id).followers.all()] or None
-    return render(request, "tweet_base.html", {"tweets": tweet, "followers": followers})
+    if request.user.is_authenticated:
+        followers = [follower.username for follower in TwitterUser.objects.get(
+            id=request.user.id).followers.all()]
+
+    if followers is not None and tweet.first().author.username not in followers:
+        is_following = "follow "
+
+    return render(request, "tweet_base.html", {"tweets": tweet, "is_following": is_following})
 
 
 def follow_view(request, auth_id, tweet_id):
@@ -109,3 +120,40 @@ def follow_view(request, auth_id, tweet_id):
 
     # breakpoint()
     return HttpResponseRedirect(reverse("home"))
+
+
+def profile_view(request):
+
+    notifications = Notification.objects.all()
+    composed = TwitterUser.objects.get(
+        username=request.user.username).tweet_set.all().count()
+    if composed is not None:
+        followers = ", ".join([follower.username for follower in TwitterUser.objects.get(
+            id=request.user.id).followers.all()])
+        tweets = [tweet for tweet in Tweet.objects.all()
+                  if tweet.author.username == request.user.username]
+
+    return render(request, "profile.html", {"notifications": notifications,
+                                            "tweets": tweets,
+                                            "composed": composed,
+                                            "followers": followers or None})
+
+
+def notification_view(request):
+
+    return render(request, "notifications.html")
+
+
+def twitter_user_profile_detailed(request, author_name, tweet_id):
+    composed = TwitterUser.objects.get(
+        username=author_name).tweet_set.all().count()
+    followers = [follower.username for follower in TwitterUser.objects.get(
+        username=author_name).followers.all()] or None
+    tweets = [tweet for tweet in Tweet.objects.all()
+              if tweet.author.username == author_name]
+    return render(request, "profile.html", {
+        "tweets": tweets,
+        "composed": composed,
+        "followers": ", ".join(followers),
+        "author_name": author_name
+    })

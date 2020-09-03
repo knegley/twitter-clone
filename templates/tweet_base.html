@@ -1,17 +1,29 @@
-{% for tweet in tweets %}
-<p>Tweet: {{tweet.message}}</p>
-<p>PostDate: {{tweet.time}}</p>
-<p>Author: {{tweet.author}}</p>
+{% if tweets %}
+<body>
+  {% for tweet in tweets %}
+  <p><strong>Tweet:</strong> {{tweet.message}}</p>
+  <p>PostDate: {{tweet.time}}</p>
+  {% if "profile" not in request.path %}
+  <p>Author: <a href="profile/{{tweet.author}}/">{{tweet.author}}</a></p>
+  {% endif %}
 
-{% if request.user.id != tweet.author_id and "tweet/" in request.path %}
-<p>
-  {% if tweet.author.username in followers %}
-  <a href="follow/{{tweet.author_id}}/"> unfollow {{tweet.author}}</a>
+  <section>
+    {% if request.user.id != tweet.author_id and "tweet/" in request.path %}
+
+    <p>
+      {% if request.user.is_authenticated %}
+      <a href="follow/{{tweet.author_id}}/">
+        {{is_following}}{{tweet.author}}</a
+      >
+      {% endif %} {% endif %}
+    </p>
+    {% if "/" == request.path %} <a href="tweet/{{tweet.id}}/">View Tweet</a>
+    {% endif %}
+    <hr />
+    {% endfor %}
+  </section>
+
   {% else %}
-  <a href="follow/{{tweet.author_id}}/">follow {{tweet.author}}</a>
-  {% endif %} {% endif %}
-</p>
-{% if "/" == request.path %} <a href="tweet/{{tweet.id}}/">View Tweet</a>
-{% endif %}
-<hr />
-{% endfor %}
+  <p>No Tweets</p>
+  {% endif%}
+</body>
