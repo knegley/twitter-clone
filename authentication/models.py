@@ -28,5 +28,8 @@ class Tweet(models.Model):
     message = models.CharField(max_length=140)
     author = models.ForeignKey(TwitterUser, on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ["-time"]
+
     def __str__(self):
         return self.message

@@ -1,9 +1,9 @@
 {% for tweet in tweets %}
-<p>Tweet:{{tweet.message}}</p>
+<p>Tweet: {{tweet.message}}</p>
 <p>PostDate: {{tweet.time}}</p>
 <p>Author: {{tweet.author}}</p>
 
-{% if request.user.id != tweet.author_id and "/" == request.path %}
+{% if request.user.id != tweet.author_id and "tweet/" in request.path %}
 <p>
   {% if tweet.author.username in followers %}
   <a href="follow/{{tweet.author_id}}/"> unfollow {{tweet.author}}</a>

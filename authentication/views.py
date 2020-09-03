@@ -7,7 +7,7 @@ from authentication.models import TwitterUser, Tweet, Notification
 def home_view(request):
     if not request.user.is_authenticated or request.user.is_anonymous:
         return HttpResponseRedirect(reverse("login"))
-    tweets = [tweet for tweet in Tweet.objects.all()][::-1]
+    tweets = [tweet for tweet in Tweet.objects.all()]
     notifications = Notification.objects.all()
     composed = TwitterUser.objects.get(
         username=request.user.username).tweet_set.all().count()
@@ -85,10 +85,12 @@ def tweet_view(request):
 def tweet_detailed_view(request, tweet_id):
     tweet = Tweet.objects.filter(id=tweet_id)
     # breakpoint()
-    return render(request, "tweet_base.html", {"tweets": tweet})
+    followers = [follower.username for follower in TwitterUser.objects.get(
+        id=request.user.id).followers.all()] or None
+    return render(request, "tweet_base.html", {"tweets": tweet, "followers": followers})
 
 
-def follow_view(request, auth_id):
+def follow_view(request, auth_id, tweet_id):
     """follows and unfollows the author for the user"""
 
     user = TwitterUser.objects.get(id=request.user.id)
