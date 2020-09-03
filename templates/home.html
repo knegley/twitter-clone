@@ -1,0 +1,7 @@
+{% include "nav_base.html" %}
+<h1>{{request.user.username}}'s Profile</h1>
+<h1>Tweets Composed: {{composed}}</h1>
+<h1>Notifications:</h1>
+<h1>Following: {{followers}}</h1>
+<h1>Tweet Board</h1>
+{% include "tweet_base.html" %}
