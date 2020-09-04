@@ -4,7 +4,7 @@
   <p><strong>Tweet:</strong> {{tweet.message}}</p>
   <p>PostDate: {{tweet.time}}</p>
   {% if "profile" not in request.path %}
-  <p>Author: <a href="profile/{{tweet.author}}/">{{tweet.author}}</a></p>
+  <p>Author: <a href="/profile/{{tweet.author}}/">{{tweet.author}}</a></p>
   {% endif %}
 
   <section>
@@ -12,7 +12,7 @@
 
     <p>
       {% if request.user.is_authenticated %}
-      <a href="follow/{{tweet.author_id}}/">
+      <a href="/follow/{{tweet.author_id}}/">
         {{is_following}}{{tweet.author}}</a
       >
       {% endif %} {% endif %}

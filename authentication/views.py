@@ -87,6 +87,12 @@ def tweet_view(request):
 
 
 def tweet_detailed_view(request, tweet_id):
+
+    try:
+        Tweet.objects.get(id=tweet_id)
+    except Exception:
+        return HttpResponseRedirect(reverse("home"))
+
     tweet = Tweet.objects.filter(id=tweet_id)
     is_following = "unfollow "
     followers = None
@@ -101,8 +107,16 @@ def tweet_detailed_view(request, tweet_id):
     return render(request, "tweet_base.html", {"tweets": tweet, "is_following": is_following})
 
 
-def follow_view(request, auth_id, tweet_id):
+def follow_view(request, auth_id):
     """follows and unfollows the author for the user"""
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("home"))
+
+    try:
+        TwitterUser.objects.get(id=auth_id)
+    except Exception:
+
+        return HttpResponseRedirect(reverse("home"))
 
     user = TwitterUser.objects.get(id=request.user.id)
     follower = TwitterUser.objects.get(id=auth_id)
@@ -144,7 +158,7 @@ def notification_view(request):
     return render(request, "notifications.html")
 
 
-def twitter_user_profile_detailed(request, author_name, tweet_id):
+def twitter_user_profile_detailed(request, author_name):
     composed = TwitterUser.objects.get(
         username=author_name).tweet_set.all().count()
     followers = [follower.username for follower in TwitterUser.objects.get(

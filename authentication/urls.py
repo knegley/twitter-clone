@@ -2,9 +2,9 @@ from django.urls import path
 from authentication import views
 urlpatterns = [
     path('', views.home_view, name="home"),
-    path("tweet/<int:tweet_id>/follow/<int:auth_id>/", views.follow_view),
-    path("tweet/<int:tweet_id>/profile/<str:author_name>/",
-         views.twitter_user_profile_detailed),
+    path("follow/<int:auth_id>/", views.follow_view),
+    #     path("tweet/<int:tweet_id>/profile/<str:author_name>/",
+    #          views.twitter_user_profile_detailed),
     path("tweet/<int:tweet_id>/",
          views.tweet_detailed_view, name="detailed_tweet"),
     path("signup/", views.signup_view,
