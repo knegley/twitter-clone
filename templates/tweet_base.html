@@ -2,10 +2,13 @@
 <body>
   {% for tweet in tweets %}
   <p><strong>Tweet:</strong> {{tweet.message}}</p>
-  <p>PostDate: {{tweet.time}}</p>
+
   {% if "profile" not in request.path %}
-  <p>Author: <a href="/profile/{{tweet.author}}/">{{tweet.author}}</a></p>
-  {% endif %}
+  <p>
+    <strong>Author:</strong>
+    <a href="/profile/{{tweet.author}}/">{{tweet.author}}</a>{% endif %}
+    <strong>PostDate:</strong> {{tweet.time}}
+  </p>
 
   <section>
     {% if request.user.id != tweet.author_id and "tweet/" in request.path %}

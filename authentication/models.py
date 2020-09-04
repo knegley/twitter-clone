@@ -24,19 +24,10 @@ class Tweet(models.Model):
 
 class Notification(models.Model):
     has_read = models.BooleanField(default=False)
-    # tweet = models.ManyToManyField(Tweet,on_delete=models.CASCADE)
-    # username_assigned=models.CharField(max_length=20)
+
     username_assigned = models.ForeignKey(
         TwitterUser, on_delete=models.CASCADE, default=None)
     tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE, default=None)
 
-    # count = models.IntegerField(default=0)
-
-    # def increment(self):
-    #     return self.count+1
-
-    # def decrement(self):
-    #     return self.count-1
-
-    # def __str__(self):
-    #     return self.count
+    def __str__(self):
+        return self.username_assigned.username

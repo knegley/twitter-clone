@@ -2,8 +2,10 @@
 <a href="{% url 'home' %}">Home</a>
 <a href="{% url 'tweet' %}">Tweet</a>
 <a href="{% url 'profile' %}">Profile</a>
+{% if notifications %}
+<a href="{% url 'notifications' %}">Notifications:{{notifications}}</a>
+{% endif %}
 <a href="{% url 'logout' %}">Logout</a>
-<a href="{% url 'notifications' %}">Notifications:</a>
 {% else %}
 <a href="{% url 'login' %}">Login</a>
 

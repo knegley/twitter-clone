@@ -8,15 +8,17 @@ def home_view(request):
     if not request.user.is_authenticated or request.user.is_anonymous:
         return HttpResponseRedirect(reverse("login"))
 
-    notifications = Notification.objects.all()
+    notifications = [n.username_assigned.username for n in Notification.objects.filter(
+        has_read=False)].count(request.user.username)
+
     composed = TwitterUser.objects.get(
         username=request.user.username).tweet_set.all().count()
 
     if composed is not None:
         followers = [follower.username for follower in TwitterUser.objects.get(
-            id=request.user.id).followers.all()]
+            id=request.user.id).followers.all()] or ""
         tweets = [tweet for tweet in Tweet.objects.all()
-                  if tweet.author.username in followers]
+                  if tweet.author.username in followers or tweet.author.username == request.user.username]
 
     return render(request, "home.html", {"notifications": notifications,
                                          "tweets": tweets,
@@ -47,7 +49,7 @@ def logout_view(request):
 
 def signup_view(request):
     form = Twitter_User_Signup()
-    print(request.path == "/signup/")
+
     if request.method == "POST":
         form = Twitter_User_Signup(request.POST)
 
@@ -73,15 +75,32 @@ def signup_view(request):
 
 
 def tweet_view(request):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse('home'))
+
     form = TweetForm()
+    usernames = [user.username for user in TwitterUser.objects.all()]
     if request.method == "POST":
         form = TweetForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            # breakpoint()
+
             message = data.get("message")
+
+            word_list = message.split()
+            users = [w for word in word_list if word.startswith(
+                "@") and (w := word[1:]) in usernames and w != request.user.username]
+
             author = request.user
-            Tweet.objects.create(message=message, author=author)
+            tweet = Tweet.objects.create(message=message, author=author)
+            if users:
+                for user in users:
+                    assigned_user = TwitterUser.objects.get(username=user)
+                    Notification.objects.create(
+                        username_assigned=assigned_user, tweet=tweet)
+            else:
+                Tweet.objects.create(message=message, author=author)
+
         return HttpResponseRedirect(reverse("home"))
     return render(request, "tweet.html", {"form": form})
 
@@ -96,7 +115,7 @@ def tweet_detailed_view(request, tweet_id):
     tweet = Tweet.objects.filter(id=tweet_id)
     is_following = "unfollow "
     followers = None
-    # breakpoint()
+
     if request.user.is_authenticated:
         followers = [follower.username for follower in TwitterUser.objects.get(
             id=request.user.id).followers.all()]
@@ -118,6 +137,9 @@ def follow_view(request, auth_id):
 
         return HttpResponseRedirect(reverse("home"))
 
+    if TwitterUser.objects.get(id=auth_id) == request.user:
+        return HttpResponseRedirect(reverse("home"))
+
     user = TwitterUser.objects.get(id=request.user.id)
     follower = TwitterUser.objects.get(id=auth_id)
     follower_username = follower.username
@@ -126,19 +148,20 @@ def follow_view(request, auth_id):
 
     if follower_username not in [f.username for f in followers]:
         followers.add(follower)
-        # breakpoint()
+
         user.followers.set(followers)
     else:
         followers.remove(follower)
         user.followers.set(followers)
 
-    # breakpoint()
     return HttpResponseRedirect(reverse("home"))
 
 
 def profile_view(request):
 
-    notifications = Notification.objects.all()
+    notifications = [n.username_assigned.username for n in Notification.objects.filter(
+        has_read=False)].count(request.user.username)
+
     composed = TwitterUser.objects.get(
         username=request.user.username).tweet_set.all().count()
     if composed is not None:
@@ -154,8 +177,23 @@ def profile_view(request):
 
 
 def notification_view(request):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("home"))
+    notification_tweets = [nt.tweet for nt in Notification.objects.filter(
+        username_assigned_id=request.user.id) if not nt.has_read]
 
-    return render(request, "notifications.html")
+    notifications = [n.username_assigned.username for n in Notification.objects.filter(
+        has_read=False)].count(request.user.username)
+
+    notifications_to_change_status = Notification.objects.filter(
+        username_assigned_id=request.user.id).filter(has_read=False)
+
+    for notification in notifications_to_change_status:
+
+        notification.has_read = True
+        notification.save()
+
+    return render(request, "notifications.html", {"tweets": notification_tweets, "notifications": notifications})
 
 
 def twitter_user_profile_detailed(request, author_name):
