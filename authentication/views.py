@@ -4,6 +4,7 @@ from authentication.forms import LogInForm, Twitter_User_Signup
 from twitter_user_app.models import TwitterUser
 from tweet.models import Tweet
 from notification.models import Notification
+from django.views.generic import TemplateView
 
 
 def home_view(request):
@@ -49,10 +50,13 @@ def logout_view(request):
     return HttpResponseRedirect(reverse("login"))
 
 
-def signup_view(request):
-    form = Twitter_User_Signup()
+class SignUpView(TemplateView):
 
-    if request.method == "POST":
+    def get(self, request):
+        form = Twitter_User_Signup()
+        return render(request, "signup.html", {"form": form})
+
+    def post(self, request):
         form = Twitter_User_Signup(request.POST)
 
         if form.is_valid():
@@ -72,5 +76,5 @@ def signup_view(request):
             if user is not None:
                 login(request, user)
                 return HttpResponseRedirect(reverse("home"))
-
-    return render(request, "signup.html", {"form": form})
+        else:
+            return render(request, "signup.html", {"form": form})
